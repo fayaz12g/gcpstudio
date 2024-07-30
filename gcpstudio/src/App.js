@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaDownload, FaInfoCircle, FaImage, FaMusic, FaPalette, FaQuestionCircle } from 'react-icons/fa';
-import './tailwind.css'; // Import Tailwind CSS
-import './output.css'; // Import Tailwind CSS output
+import './tailwind.css'; 
+import './output.css'; 
+import mainApp from './mainApp.png'; 
+import deckEdit from './deckEdit.png'; 
 
 const App = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -40,7 +42,7 @@ const App = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           <a 
-            href="/download/gcpstudio.py" 
+            href="/gcpstudio.py" 
             className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center transition duration-300"
             download
           >
@@ -90,8 +92,8 @@ const App = () => {
         >
           <h2 className="text-3xl font-bold mb-4">Screenshots</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <img src="/placeholder-screenshot1.jpg" alt="GCP Studio Interface" className="rounded-lg shadow-lg" />
-            <img src="/placeholder-screenshot2.jpg" alt="Card Editing" className="rounded-lg shadow-lg" />
+            <img src={mainApp} alt="GCP Studio Interface" className="rounded-lg shadow-lg" />
+            <img src={deckEdit} alt="Card Editing" className="rounded-lg shadow-lg" />
           </div>
         </motion.div>
 
