@@ -17,22 +17,17 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 via-purple-700 to-purple-900 text-white">
       <header className="container mx-auto py-8">
-        <motion.h1 
-          className="text-6xl font-extrabold text-center"
+      <motion.div
+          className="text-center"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          GCP Studio
-        </motion.h1>
-        <motion.p 
-          className="text-2xl text-center mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          Create custom trivia card packs for your games
-        </motion.p>
+          <img src={GCPLogo} alt="GCP Logo" className="mx-auto mb-4" />
+          <h1 className="text-6xl font-extrabold">
+            GCP Studio
+          </h1>
+        </motion.div>
       </header>
 
       <main className="container mx-auto mt-12">
