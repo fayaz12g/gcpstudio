@@ -5,6 +5,7 @@ import './tailwind.css';
 import './output.css'; 
 import mainApp from './mainApp.png'; 
 import deckEdit from './deckEdit.png'; 
+import GCPLogo from './GCPLogo.png'; 
 
 const App = () => {
   const [isLoaded, setIsLoaded] = useState(false);
