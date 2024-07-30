@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaDownload, FaInfoCircle, FaImage, FaMusic, FaPalette, FaQuestionCircle } from 'react-icons/fa';
+import './tailwind.css'; // Import Tailwind CSS
+import './output.css'; // Import Tailwind CSS output
 
 const App = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -10,10 +12,10 @@ const App = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-700 via-purple-700 to-purple-900 text-white">
       <header className="container mx-auto py-8">
         <motion.h1 
-          className="text-5xl font-bold text-center"
+          className="text-6xl font-extrabold text-center"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -21,7 +23,7 @@ const App = () => {
           GCP Studio
         </motion.h1>
         <motion.p 
-          className="text-xl text-center mt-4"
+          className="text-2xl text-center mt-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -100,7 +102,7 @@ const App = () => {
           transition={{ duration: 0.5, delay: 1 }}
         >
           <h2 className="text-3xl font-bold mb-4">Documentation</h2>
-          <div className="bg-white bg-opacity-10 p-6 rounded-lg">
+          <div className="bg-white bg-opacity-20 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-2">Getting Started</h3>
             <ol className="list-decimal list-inside space-y-2">
               <li>Download GCP Studio from the button above.</li>
@@ -123,7 +125,7 @@ const App = () => {
 
 const FeatureCard = ({ icon, title, description }) => (
   <motion.div 
-    className="bg-white bg-opacity-10 p-6 rounded-lg"
+    className="bg-white bg-opacity-20 p-6 rounded-lg"
     whileHover={{ scale: 1.05 }}
     transition={{ duration: 0.3 }}
   >
