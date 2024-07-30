@@ -6,6 +6,18 @@
   text-align: center;
 }
 
+@layer utilities {
+  .hover\\:grow {
+    transition: transform 0.3s ease-in-out;
+  }
+  .hover\\:grow:hover {
+    transform: scale(1.1);
+  }
+  .hover\\:rainbow:hover {
+    animation: rainbow 5s linear infinite;
+  }
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

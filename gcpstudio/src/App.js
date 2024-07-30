@@ -43,7 +43,7 @@ const App = () => {
         >
           <a 
             href="/gcpstudio.py" 
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center transition duration-300"
+            className="bg-green-500 hover:rainbow hover:grow text-white font-bold py-3 px-6 rounded-full inline-flex items-center transition duration-300"
             download
           >
             <FaDownload className="mr-2" />
