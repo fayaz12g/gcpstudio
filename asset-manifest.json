@@ -1,15 +1,17 @@
 {
   "files": {
     "main.css": "/gcpstudio/static/css/main.35d9a763.css",
-    "main.js": "/gcpstudio/static/js/main.6bb8a3a2.js",
+    "main.js": "/gcpstudio/static/js/main.313c285a.js",
     "static/js/453.fef2e314.chunk.js": "/gcpstudio/static/js/453.fef2e314.chunk.js",
+    "static/media/deckEdit.png": "/gcpstudio/static/media/deckEdit.209b4937d60a39e0d816.png",
+    "static/media/mainApp.png": "/gcpstudio/static/media/mainApp.1bb7d5438f3be1ffc040.png",
     "index.html": "/gcpstudio/index.html",
     "main.35d9a763.css.map": "/gcpstudio/static/css/main.35d9a763.css.map",
-    "main.6bb8a3a2.js.map": "/gcpstudio/static/js/main.6bb8a3a2.js.map",
+    "main.313c285a.js.map": "/gcpstudio/static/js/main.313c285a.js.map",
     "453.fef2e314.chunk.js.map": "/gcpstudio/static/js/453.fef2e314.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.35d9a763.css",
-    "static/js/main.6bb8a3a2.js"
+    "static/js/main.313c285a.js"
   ]
 }
