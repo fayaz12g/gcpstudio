@@ -30,12 +30,11 @@ const App = () => {
 
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert('Command copied to clipboard!');
     if (text===windowsCommand) {
       setCopyWindows(true);
       setTimeout(() => setCopyWindows(false), 2000);
     }
-    if (text===windowsCommand) {
+    else if (text===macCommand) {
       setCopyLinux(true);
       setTimeout(() => setCopyLinux(false), 2000);
     }
