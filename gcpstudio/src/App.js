@@ -9,6 +9,12 @@ import GCPLogo from './GCPLogo.png';
 
 const App = () => {
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const [copyWindows, setCopyWindows] = useState(false);
+  const [copyLinux, setCopyLinux] = useState(false);
+
+  const windowsCommand = 'curl -o gcpstudio.py https://fayaz.one/gcpstudio/gcpstudio.py && python gcpstudio.py';
+  const macCommand = 'curl -O https://fayaz.one/gcpstudio/gcpstudio.py && python3 gcpstudio.py';
+
 
   useEffect(() => {
     // Optional: If you need to perform any actions when the component mounts.
@@ -25,10 +31,15 @@ const App = () => {
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     alert('Command copied to clipboard!');
+    if (text===windowsCommand) {
+      setCopyWindows(true);
+      setTimeout(() => setCopyWindows(false), 2000);
+    }
+    if (text===windowsCommand) {
+      setCopyLinux(true);
+      setTimeout(() => setCopyLinux(false), 2000);
+    }
   };
-
-  const windowsCommand = 'curl -o gcpstudio.py https://fayaz.one/gcpstudio/gcpstudio.py && python gcpstudio.py';
-  const macCommand = 'curl -O https://fayaz.one/gcpstudio/gcpstudio.py && python3 gcpstudio.py';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 via-purple-700 to-purple-900 text-white">
@@ -150,22 +161,23 @@ const App = () => {
               </p>
               <button
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => handleCopyToClipboard(windowsCommand)}
+                onClick={() => handleCopyToClipboard(windowsCommand, 'windows')}
               >
-                Copy Command
+                {copyWindows ? 'Copied!' : 'Copy Command'}
               </button>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">macOS/Linux:</h3>
-              <p className="bg-gray-100 p-2 rounded mb-2">
-                {macCommand}
-              </p>
-              <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => handleCopyToClipboard(macCommand)}
-              >
-                Copy Command
-              </button>
+
+              <div>
+                <h3 className="text-lg font-semibold">macOS/Linux:</h3>
+                <p className="bg-gray-100 p-2 rounded mb-2">
+                  {macCommand}
+                </p>
+                <button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleCopyToClipboard(macCommand, 'linux')}
+                >
+                  {copyLinux ? 'Copied!' : 'Copy Command'}
+                </button>
+              </div>
             </div>
             <div className="text-center mt-6">
             <p className="mb-4">Alternatively, use the button below to download the Python script.</p>
