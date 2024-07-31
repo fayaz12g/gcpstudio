@@ -144,7 +144,7 @@ const App = () => {
             <h2 className="text-xl font-bold mb-4">How to Run GCP Studio</h2>
             <p className="mb-4">Follow the instructions below to run GCP Studio:</p>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">Windows:</h3>
+              <h3 className="text-lg font-semibold">Windows (Command Prompt):</h3>
               <p className="bg-gray-100 p-2 rounded mb-2">
                 {windowsCommand}
               </p>
@@ -168,6 +168,7 @@ const App = () => {
               </button>
             </div>
             <div className="text-center mt-6">
+            <p className="mb-4">Alternatively, use the button below to download the Python script.</p>
               <a
                 href="https://fayaz.one/gcpstudio/gcpstudio.py"
                 download="gcpstudio.py"
