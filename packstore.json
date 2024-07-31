@@ -1,0 +1,29 @@
+{
+  "url": "https://raw.githubusercontent.com/fayaz12g/gcpstudio/main/packstore.json",
+  "packs": [
+    {
+      "id": "apple",
+      "name": "Apple Trivia"
+    },
+    {
+      "id": "nintendo",
+      "name": "Nintendo Trivia"
+    },
+    {
+      "id": "socialstudies",
+      "name": "Social Studies Trivia"
+    },
+    {
+      "id": "pop",
+      "name": "Pop Culture Trivia"
+    },
+    {
+      "id": "schools",
+      "name": "School Trivia"
+    },
+    {
+      "id": "misc",
+      "name": "Miscellaneous Trivia"
+    }
+  ]
+}
