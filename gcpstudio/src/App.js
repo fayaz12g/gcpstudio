@@ -8,25 +8,39 @@ import deckEdit from './deckEdit.png';
 import GCPLogo from './GCPLogo.png'; 
 
 const App = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(true);
+    // Optional: If you need to perform any actions when the component mounts.
   }, []);
+
+  const handleDownloadClick = () => {
+    setIsOverlayVisible(true);
+  };
+
+  const handleCloseOverlay = () => {
+    setIsOverlayVisible(false);
+  };
+
+  const handleCopyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Command copied to clipboard!');
+  };
+
+  const windowsCommand = 'curl -o gcpstudio.py https://fayaz.one/gcpstudio/gcpstudio.py && python gcpstudio.py';
+  const macCommand = 'curl -O https://fayaz.one/gcpstudio/gcpstudio.py && python3 gcpstudio.py';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 via-purple-700 to-purple-900 text-white">
       <header className="container mx-auto py-8">
-      <motion.div
+        <motion.div
           className="text-center"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <img src={GCPLogo} alt="GCP Logo" className="mx-auto mb-4" />
-          <h1 className="text-6xl font-extrabold">
-            GCP Studio
-          </h1>
+          <h1 className="text-6xl font-extrabold">GCP Studio</h1>
         </motion.div>
       </header>
 
@@ -37,14 +51,13 @@ const App = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <a 
-            href="/gcpstudio.py" 
-            className="bg-green-500 hover:rainbow hover:grow text-white font-bold py-3 px-6 rounded-full inline-flex items-center transition duration-300"
-            download
+          <button 
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full inline-flex items-center transition duration-300"
+            onClick={handleDownloadClick}
           >
             <FaDownload className="mr-2" />
             Download GCP Studio
-          </a>
+          </button>
         </motion.div>
 
         <motion.div 
@@ -117,6 +130,55 @@ const App = () => {
       <footer className="container mx-auto mt-16 py-8 text-center">
         <p>&copy; 2024 GCP Studio. All rights reserved.</p>
       </footer>
+
+      {/* Overlay for download instructions */}
+      {isOverlayVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-80 z-50">
+          <div className="bg-white p-8 rounded-lg text-black max-w-md mx-auto relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+              onClick={handleCloseOverlay}
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">How to Run GCP Studio</h2>
+            <p className="mb-4">Follow the instructions below to run GCP Studio:</p>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Windows:</h3>
+              <p className="bg-gray-100 p-2 rounded mb-2">
+                {windowsCommand}
+              </p>
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                onClick={() => handleCopyToClipboard(windowsCommand)}
+              >
+                Copy Command
+              </button>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">macOS/Linux:</h3>
+              <p className="bg-gray-100 p-2 rounded mb-2">
+                {macCommand}
+              </p>
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                onClick={() => handleCopyToClipboard(macCommand)}
+              >
+                Copy Command
+              </button>
+            </div>
+            <div className="text-center mt-6">
+              <a
+                href="https://fayaz.one/gcpstudio/gcpstudio.py"
+                download="gcpstudio.py"
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Download Python Script
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
