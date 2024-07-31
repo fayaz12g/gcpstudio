@@ -7,20 +7,21 @@ import zipfile
 import shutil
 import tempfile
 from PIL import Image, ImageTk
+import requests
+from pathlib import Path
+from pydub import AudioSegment
+from pydub.playback import play
 import pygame
 
 class GCPStudio:
     def __init__(self, root):
         self.root = root
         self.root.title("GCP Studio")
-        self.root.geometry('1000x600')
+        self.root.geometry('1200x600')
 
         self.temp_dir = None
         self.current_gcp_path = None
-
-        pygame.init()
-        pygame.mixer.init()
-
+        self.opened_packs = {}
         self.setup_ui()
 
     def setup_ui(self):
@@ -28,8 +29,24 @@ class GCPStudio:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
+        # Pack manager frame
+        pack_manager_frame = ttk.Frame(main_frame, width=200)
+        pack_manager_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
+
+        self.pack_tree = ttk.Treeview(pack_manager_frame, columns=('name',), show='tree')
+        self.pack_tree.heading('#0', text='Packs')
+        self.pack_tree.heading('name', text='Name')
+        self.pack_tree.pack(fill=tk.BOTH, expand=True)
+
+        download_button = ttk.Button(pack_manager_frame, text="Download Packs", command=self.download_packs)
+        download_button.pack(pady=10)
+
+        # Right side frame
+        right_frame = ttk.Frame(main_frame)
+        right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
         # Pack info frame
-        pack_info_frame = ttk.LabelFrame(main_frame, text="Pack Info", padding="10")
+        pack_info_frame = ttk.LabelFrame(right_frame, text="Pack Info", padding="10")
         pack_info_frame.pack(fill=tk.X, pady=5)
 
         ttk.Label(pack_info_frame, text="Pack ID:").grid(row=0, column=0, sticky=tk.W)
@@ -41,7 +58,7 @@ class GCPStudio:
         self.pack_name_entry.grid(row=1, column=1, sticky=tk.W)
 
         # Decks frame
-        decks_frame = ttk.LabelFrame(main_frame, text="Decks", padding="10")
+        decks_frame = ttk.LabelFrame(right_frame, text="Decks", padding="10")
         decks_frame.pack(fill=tk.BOTH, expand=True, pady=5)
 
         self.decks_tree = ttk.Treeview(decks_frame, columns=('Image', 'ID', 'Name', 'Color', 'Sound', 'Edit'), show='headings')
@@ -58,12 +75,121 @@ class GCPStudio:
         self.decks_tree.column('Edit', width=50, anchor='center')
 
         # Buttons frame
-        buttons_frame = ttk.Frame(main_frame)
+        buttons_frame = ttk.Frame(right_frame)
         buttons_frame.pack(fill=tk.X, pady=5)
 
         ttk.Button(buttons_frame, text="Open GCP", command=self.open_gcp).pack(side=tk.LEFT, padx=5)
         ttk.Button(buttons_frame, text="Save GCP", command=self.save_gcp).pack(side=tk.LEFT, padx=5)
         ttk.Button(buttons_frame, text="Add Deck", command=self.add_deck).pack(side=tk.LEFT, padx=5)
+
+        # Bind pack tree selection
+        self.pack_tree.bind('<<TreeviewSelect>>', self.on_pack_select)
+        self.pack_tree.bind("<Button-3>", self.show_pack_context_menu)
+
+    def show_pack_context_menu(self, event):
+        selected_item = self.pack_tree.identify_row(event.y)
+        if selected_item:
+            self.pack_tree.selection_set(selected_item)
+            menu = tk.Menu(self.root, tearoff=0)
+            menu.add_command(label="Remove Pack", command=lambda: self.remove_pack(selected_item))
+            menu.tk_popup(event.x_root, event.y_root)
+
+    def remove_pack(self, pack_id):
+        self.pack_tree.delete(pack_id)
+        if pack_id in self.opened_packs:
+            del self.opened_packs[pack_id]
+
+            
+    def download_packs(self):
+        # Default packstore URL
+        default_url = "https://raw.githubusercontent.com/fayaz12g/gcpstudio/main/packstore.json"
+        
+        # Ask for packstore URL
+        packstore_url = simpledialog.askstring("Download Packs", "Enter packstore URL:", initialvalue=default_url)
+        
+        if not packstore_url:
+            return
+
+        try:
+            # Fetch packstore.json
+            response = requests.get(packstore_url)
+            response.raise_for_status()
+            packstore = response.json()
+
+            # Create a new window for pack selection
+            select_window = tk.Toplevel(self.root)
+            select_window.title("Select Packs to Download")
+
+            # Create a frame with scrollbar
+            frame = ttk.Frame(select_window)
+            frame.pack(fill=tk.BOTH, expand=True)
+
+            canvas = tk.Canvas(frame)
+            scrollbar = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+            scrollable_frame = ttk.Frame(canvas)
+
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Create checkbuttons for each pack
+            pack_vars = {}
+            for pack in packstore['packs']:
+                var = tk.BooleanVar()
+                ttk.Checkbutton(scrollable_frame, text=f"{pack['name']} ({pack['id']})", variable=var).pack(anchor="w")
+                pack_vars[pack['id']] = var
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            def select_all():
+                for var in pack_vars.values():
+                    var.set(True)
+
+            def download_selected():
+                selected_packs = [pack_id for pack_id, var in pack_vars.items() if var.get()]
+                self.download_selected_packs(packstore, selected_packs)
+                select_window.destroy()
+
+            ttk.Button(select_window, text="Select All", command=select_all).pack(pady=5)
+            ttk.Button(select_window, text="Download Selected", command=download_selected).pack(pady=5)
+
+        except requests.RequestException as e:
+            messagebox.showerror("Error", f"Failed to fetch packstore: {str(e)}")
+
+    def download_selected_packs(self, packstore, selected_packs):
+        base_url = os.path.dirname(packstore['url'])
+        app_data_dir = Path(os.getenv('APPDATA')) / 'GCP Studio'
+        app_data_dir.mkdir(parents=True, exist_ok=True)
+
+        for pack in packstore['packs']:
+            if pack['id'] in selected_packs:
+                pack_url = f"{base_url}/packs/{pack['id']}.gcp"
+                try:
+                    response = requests.get(pack_url)
+                    response.raise_for_status()
+                    pack_path = app_data_dir / f"{pack['id']}.gcp"
+                    with open(pack_path, 'wb') as f:
+                        f.write(response.content)
+                    self.add_pack_to_tree(pack['id'], pack['name'], str(pack_path))
+                except requests.RequestException as e:
+                    messagebox.showerror("Error", f"Failed to download {pack['name']}: {str(e)}")
+
+        messagebox.showinfo("Success", "Selected packs have been downloaded and added to the pack manager.")
+
+    def add_pack_to_tree(self, pack_id, pack_name, pack_path):
+        self.pack_tree.insert('', 'end', pack_id, text=pack_id, values=(pack_name,))
+        self.opened_packs[pack_id] = pack_path
+
+    def on_pack_select(self, event):
+        selected_item = self.pack_tree.selection()[0]
+        pack_path = self.opened_packs.get(selected_item)
+        if pack_path:
+            self.open_gcp(pack_path)
 
 
     def cleanup_temp_dir(self):
@@ -72,8 +198,15 @@ class GCPStudio:
         self.temp_dir = None
         self.current_gcp_path = None
 
-    def open_gcp(self):
-        file_path = filedialog.askopenfilename(title="Select GCP file", filetypes=[("GCP files", "*.gcp")])
+    def set_tag_colors(self):
+        for item in self.decks_tree.get_children():
+            deck_id = self.decks_tree.item(item, 'values')[1]
+            color = self.decks_tree.item(item, 'values')[3]
+            self.decks_tree.tag_configure(deck_id, background=color)
+            
+    def open_gcp(self, file_path=None):
+        if file_path is None:
+            file_path = filedialog.askopenfilename(title="Select GCP file", filetypes=[("GCP files", "*.gcp")])
         if not file_path:
             return
 
@@ -112,6 +245,15 @@ class GCPStudio:
             self.pack_name_entry.delete(0, tk.END)
             self.pack_name_entry.insert(0, info.get('name', ''))
 
+            # Add to pack manager tree if not already added
+            pack_id = info.get('id', '')
+            pack_name = info.get('name', '')
+            if pack_id not in self.opened_packs:
+                self.add_pack_to_tree(pack_id, pack_name, file_path)
+
+            # Initialize the images dictionary
+            self.decks_tree.images = {}
+
             # Clear and update decks tree
             self.decks_tree.delete(*self.decks_tree.get_children())
             for card in info.get('cards', []):
@@ -119,16 +261,8 @@ class GCPStudio:
                 image_path = os.path.join(self.temp_dir, "image", f"{deck['id']}.png")
                 sound_path = os.path.join(self.temp_dir, "sound", f"{deck['id']}.m4a")
                 
-                if os.path.exists(image_path):
-                    image = Image.open(image_path).resize((30, 30))
-                    photo = ImageTk.PhotoImage(image)
-                else:
-                    photo = None
-                
-                item = self.decks_tree.insert('', 'end', values=('', deck['id'], deck['name'], deck['color'], '', 'Edit'))
-                if photo:
-                    self.decks_tree.set(item, 'Image', '')
-                    self.decks_tree.item(item, image=photo)
+                item = self.decks_tree.insert('', 'end', values=('', deck['id'], deck['name'], deck['color'], '', 'Edit'), tags=(deck['id'],))
+                self.update_tree_item_image(item, image_path)
                 self.decks_tree.set(item, 'Sound', '▶' if os.path.exists(sound_path) else '')
 
             self.decks_tree.bind('<Double-1>', self.edit_deck)
@@ -137,6 +271,7 @@ class GCPStudio:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open GCP file: {str(e)}")
             self.cleanup_temp_dir()
+
 
     def decompress_file(self, file_path, target_dir, file_extension):
         if os.path.exists(file_path):
@@ -158,10 +293,22 @@ class GCPStudio:
 
     def play_sound(self, sound_path):
         if os.path.exists(sound_path):
-            pygame.mixer.music.load(sound_path)
-            pygame.mixer.music.play()
+            try:
+                # Convert audio to WAV format
+                sound = AudioSegment.from_file(sound_path)
+                wav_path = tempfile.mktemp(suffix='.wav')
+                sound.export(wav_path, format='wav')
+
+                # Play the WAV file using pygame
+                pygame.mixer.music.load(wav_path)
+                pygame.mixer.music.play()
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to play sound: {str(e)}")
         else:
-            messagebox.showerror("Error", "Sound file not found.")
+            messagebox.showerror("Error", f"Sound file not found: {sound_path}")
+
+
 
     def show_context_menu(self, event):
         item = self.decks_tree.identify_row(event.y)
@@ -251,33 +398,85 @@ class GCPStudio:
             photo = ImageTk.PhotoImage(image)
             self.decks_tree.set(item, 'Image', '')
             self.decks_tree.item(item, image=photo)
-            self.decks_tree.photo = photo  # Keep a reference to prevent garbage collection
+            self.decks_tree.images[item] = photo  # Store the image reference
+        else:
+            self.decks_tree.set(item, 'Image', 'No image')
+
 
     def save_gcp(self):
-        if not self.temp_dir or not self.current_gcp_path:
-            messagebox.showerror("Error", "No GCP file is currently open.")
+        # Ask for save location
+        save_path = filedialog.asksaveasfilename(defaultextension=".gcp", filetypes=[("GCP files", "*.gcp")])
+        if not save_path:
             return
 
-        # Update info.json
-        info_path = os.path.join(self.temp_dir, "info.json")
-        with open(info_path, 'r') as f:
-            info = json.load(f)
+        # Validate required fields
+        if not self.pack_id_entry.get():
+            self.show_field_error(self.pack_id_entry, "Pack ID is required")
+            return
+        if not self.pack_name_entry.get():
+            self.show_field_error(self.pack_name_entry, "Pack Name is required")
+            return
 
-        info['id'] = self.pack_id_entry.get()
-        info['name'] = self.pack_name_entry.get()
+        # Create info.json
+        info = {
+            "id": self.pack_id_entry.get(),
+            "name": self.pack_name_entry.get(),
+            "cards": []
+        }
 
-        info['cards'] = []
         for item in self.decks_tree.get_children():
             values = self.decks_tree.item(item)['values']
+            if not values[1] or not values[2] or not values[3]:
+                messagebox.showerror("Error", f"Deck {values[1]} is missing required fields (ID, Name, or Color)")
+                return
             info['cards'].append({values[3]: {"id": values[1], "name": values[2], "color": values[3]}})
 
-        with open(info_path, 'w') as f:
-            json.dump(info, f, indent=2)
+        # Create temporary directory for packing
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save info.json
+            with open(os.path.join(temp_dir, "info.json"), 'w') as f:
+                json.dump(info, f, indent=2)
 
-        # Compress the pack
-        self.compress_pack(self.temp_dir, self.current_gcp_path)
+            # Create deck, image, and sound directories
+            os.makedirs(os.path.join(temp_dir, "deck"))
+            os.makedirs(os.path.join(temp_dir, "image"))
+            os.makedirs(os.path.join(temp_dir, "sound"))
 
-        messagebox.showinfo("Success", f"Pack saved as {self.current_gcp_path}")
+            # Copy or create placeholder files
+            for card in info['cards']:
+                deck_id = list(card.values())[0]['id']
+                
+                # Deck JSON
+                deck_path = os.path.join(temp_dir, "deck", f"{deck_id}.json")
+                if self.temp_dir and os.path.exists(os.path.join(self.temp_dir, "deck", f"{deck_id}.json")):
+                    shutil.copy(os.path.join(self.temp_dir, "deck", f"{deck_id}.json"), deck_path)
+                else:
+                    with open(deck_path, 'w') as f:
+                        json.dump({"name": list(card.values())[0]['name'], "color": list(card.values())[0]['color'], "cards": []}, f, indent=2)
+
+                # Image
+                image_path = os.path.join(temp_dir, "image", f"{deck_id}.png")
+                if self.temp_dir and os.path.exists(os.path.join(self.temp_dir, "image", f"{deck_id}.png")):
+                    shutil.copy(os.path.join(self.temp_dir, "image", f"{deck_id}.png"), image_path)
+                else:
+                    Image.new('RGB', (1, 1), color='white').save(image_path)
+
+                # Sound
+                sound_path = os.path.join(temp_dir, "sound", f"{deck_id}.m4a")
+                if self.temp_dir and os.path.exists(os.path.join(self.temp_dir, "sound", f"{deck_id}.m4a")):
+                    shutil.copy(os.path.join(self.temp_dir, "sound", f"{deck_id}.m4a"), sound_path)
+                else:
+                    open(sound_path, 'wb').close()  # Create empty file
+
+            # Compress the pack
+            self.compress_pack(temp_dir, save_path)
+
+        messagebox.showinfo("Success", f"Pack saved as {save_path}")
+
+    def show_field_error(self, widget, message):
+        error_label = ttk.Label(widget.master, text=message, foreground="red")
+        error_label.grid(row=widget.grid_info()['row'], column=widget.grid_info()['column']+1)
+        widget.master.after(3000, error_label.destroy)  # Remove error message after 3 seconds
 
     def add_deck(self):
         # Open a dialog to get deck details
@@ -426,15 +625,24 @@ class GCPStudio:
 
         # Save button
         def save_deck():
-            deck_data['cards'] = []
-            for answer_entry, hint_entries in card_widgets:
-                deck_data['cards'].append({
-                    "answer": answer_entry.get(),
-                    "hints": [hint.get() for hint in hint_entries]
-                })
-            with open(deck_path, 'w') as f:
-                json.dump(deck_data, f, indent=2)
-            deck_window.destroy()
+                deck_data['name'] = deck_name_entry.get()
+                deck_data['color'] = deck_color_entry.get()
+                deck_data['cards'] = []
+                for answer_entry, hint_entries in card_widgets:
+                    deck_data['cards'].append({
+                        "answer": answer_entry.get(),
+                        "hints": [hint.get() for hint in hint_entries]
+                    })
+                with open(deck_path, 'w') as f:
+                    json.dump(deck_data, f, indent=2)
+                
+                # Update main treeview
+                for item in self.decks_tree.get_children():
+                    if self.decks_tree.item(item, "values")[1] == deck_id:
+                        self.decks_tree.item(item, values=('', deck_id, deck_data['name'], deck_data['color'], self.decks_tree.item(item, "values")[4], 'Edit'))
+                        break
+                
+                deck_window.destroy()
 
         ttk.Button(deck_window, text="Save Deck", command=save_deck).pack(pady=10)
 
