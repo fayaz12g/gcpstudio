@@ -50,7 +50,7 @@ const App = () => {
           transition={{ duration: 0.5 }}
         >
           <img src={GCPLogo} alt="GCP Logo" className="mx-auto mb-4" />
-          <h1 className="text-6xl font-extrabold">GCP Studio</h1>
+          <h1 className="text-5xl font-extrabold">Version 1.0.0</h1>
         </motion.div>
       </header>
 
@@ -66,7 +66,7 @@ const App = () => {
             onClick={handleDownloadClick}
           >
             <FaDownload className="mr-2" />
-            Download GCP Studio
+            Download Now
           </button>
         </motion.div>
 
