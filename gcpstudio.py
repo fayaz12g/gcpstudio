@@ -19,6 +19,9 @@ class GCPStudio:
         self.root.title("GCP Studio")
         self.root.geometry('1200x600')
 
+        pygame.init()
+        pygame.mixer.init()
+
         self.temp_dir = None
         self.current_gcp_path = None
         self.opened_packs = {}
